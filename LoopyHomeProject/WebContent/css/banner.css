@@ -1,0 +1,8 @@
+.banner-slider {
+  display: flex;
+  flex-flow: row nowrap;
+  overflow: hidden;
+  width: 400%;
+  position: relative;
+  /* transition: 0.4s; */
+}

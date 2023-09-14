@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board">
+	<!--전체 자유게시판글 갯수 조회 -->
+	<select id="countFBoard" resultType="int">
+		SELECT COUNT(*) FROM
+		FREEBOARD
+	</select>
+
+	<!--전체 문의게시판글 갯수 조회 -->
+	<select id="countIBoard" resultType="int">
+		SELECT COUNT(*) FROM
+		INQ_BOARD
+	</select>
+
+	<!--전체 공지게시판글 갯수 조회 -->
+	<select id="countNBoard" resultType="int">
+		SELECT COUNT(*) FROM
+		notice
+	</select>
+	
+	<!--특정 자유게시판글 조회 -->
+	<select id="getFreeBoard" parameterType="comm.vo.FreeBoardVO" resultType="comm.vo.FreeBoardVO">
+		select * from freeboard where free_no = #{freeNo}
+	</select>
+	<!--특정 문의게시판글 조회 -->
+	<select id="getInqBoard" parameterType="comm.vo.InqBoardVO" resultType="comm.vo.InqBoardVO">
+		select * from Inq_board where inq_no = #{inqNo}
+	</select>
+	<!--특정 공지게시판글 조회 -->
+	<select id="getNotice" parameterType="comm.vo.NoticeVO" resultType="comm.vo.NoticeVO">
+		select * from Notice where notice_no = #{NoticeNo}
+	</select>
+
+	<!-- 범위별 자유게시판 조회 -->
+	<select id="fBoardList" parameterType="map"
+		resultType="comm.vo.FreeBoardVO">
+		select A.*from(
+		select ROWNUM as RNUM, B.* FROM(
+		select * from freeboard
+		order by free_no desc
+		)B
+      <![CDATA[
+      WHERE ROWNUM <= #{end}
+      )A
+      where A.RNUM >= #{start}
+      ]]>
+	</select>
+
+	<!-- 범위별 문의게시판 조회 -->
+	<select id="iBoardList" parameterType="map"
+		resultType="comm.vo.InqBoardVO">
+		SELECT
+		A.RNUM
+		, A.INQ_NO AS INQNO
+		, A.INQ_TITLE AS INQTITLE
+		,
+		A.INQ_CONTENT AS INQCONTENT
+		, A.INQ_DATE AS INQDATE
+		, A.INQ_VIEWS AS
+		INQVIEWS
+		, A.BD_CODE AS BDCODE
+		, A.CUST_ID AS CUSTID
+		FROM(
+		SELECT ROWNUM
+		AS RNUM, B.*
+		FROM (
+		SELECT *
+		FROM INQ_BOARD
+		ORDER BY INQ_NO DESC
+		) B
+		<!-- [CDATA[]] '<=' 기호때문에 감싸서 변환해줌 -->
+      <![CDATA[
+      WHERE ROWNUM <= #{end}
+      )A
+      where A.RNUM >= #{start}
+      ]]>
+	</select>
+
+	<!-- 범위별 공지게시판 조회 -->
+	<select id="nBoardList" parameterType="map"
+		resultType="comm.vo.NoticeVO">
+		SELECT
+		A.RNUM
+		, A.NOTICE_NO AS NOTICENO
+		, A.NOTICE_DATE AS NOTICEDATE
+		,
+		A.NOTICE_TITLE AS NOTICETITLE
+		, A.NOTICE_CONTENT AS NOTICECONTENT
+		,
+		A.NOTICE_VIEWS AS NOTICEVIEWS
+		, A.MNG_ID AS MNGID
+		FROM(
+		SELECT ROWNUM AS
+		RNUM, B.*
+		FROM (
+		SELECT *
+		FROM NOTICE
+		ORDER BY NOTICE_NO DESC
+		) B
+		<!-- [CDATA[]] '<=' 기호때문에 감싸서 변환해줌 -->
+      <![CDATA[
+      WHERE ROWNUM <= #{end}
+      )A
+      where A.RNUM >= #{start}
+      ]]>
+	</select>
+
+
+
+	<!-- 자유게시판 추가 -->
+	<insert id="insertFreeBoard" parameterType="comm.vo.FreeBoardVO">
+		insert into freeboard
+		(free_no,free_title,free_content,free_date,bd_code,cust_id,free_image)
+		values ( free_seq.nextval, #{freeTitle}, #{freeContent},
+		sysdate,'free',
+		#{custId},#{freeImage})
+	</insert>
+
+	<!-- 문의게시판 추가 -->
+	<insert id="insertInqBoard" parameterType="comm.vo.InqBoardVO">
+		insert into inq_board
+		(inq_no,inq_title,inq_content,inq_date,bd_code,cust_id)
+		values (
+		inq_seq.nextval, #{inqTitle}, #{inqContent}, sysdate,'inq',
+		#{custId})
+
+	</insert>
+
+
+	<!-- 자유게시판 댓글 조회 -->
+	<select id="getListFreeComt" parameterType="comm.vo.FreeComtVO"
+		resultType="comm.vo.FreeComtVO">
+		select * from
+		free_comt where free_no = #{freeNo} ORDER BY
+		TO_NUMBER(freecm_no) DESC
+	</select>
+
+	<!-- 자유게시판 댓글 추가 -->
+	<insert id="insertFreeComt" parameterType="comm.vo.FreeComtVO">
+		insert into free_comt
+		(freecm_no,freecm_date,freecm_content,cust_id,free_no)
+		values
+		(freecm_seq.nextval, sysdate, #{freeCmContent},#{custId},#{freeNo})
+	</insert>
+
+	<!-- 자유게시판 댓글 수정 -->
+	<update id="updateFreeComt" parameterType="comm.vo.FreeComtVO">
+		update free_comt
+		set
+		freecm_content = #{freeCmContent}
+		,freecm_date = sysdate
+		where freecm_no
+		= #{freeCmNo}
+	</update>
+	<!-- 자유게시판 댓글 삭제 -->
+	<delete id="deleteFreeComt" parameterType="comm.vo.FreeComtVO">
+		delete from free_comt
+		where freecm_no = #{freeCmNo}
+	</delete>
+
+	<!-- 자유게시판 수정 -->
+	<update id="updateFreeBoard" parameterType="comm.vo.FreeBoardVO">
+		update freeboard
+		set
+		free_title = #{freeTitle}
+		,free_content = #{freeContent}
+		,free_date =
+		sysdate
+		,free_image = #{freeImage}
+		where free_no = #{freeNo}
+	</update>
+	<!-- 자유게시판 삭제 -->
+	<delete id="deleteFreeBoard" parameterType="comm.vo.FreeBoardVO">
+		delete from freeboard
+		where
+		cust_id = #{custId} and free_no = #{freeNo}
+	</delete>
+
+	<!-- 공지게시판 수정 -->
+	<update id="updateNotice" parameterType="comm.vo.NoticeVO">
+		update notice
+		set
+		notice_title = #{noticeTitle}
+		,notice_content = #{noticeContent}
+		,notice_date = sysdate
+		where notice_no = #{noticeNo}
+	</update>
+	<!-- 공지게시판 삭제 -->
+	<delete id="deleteNotice" parameterType="comm.vo.NoticeVO">
+		delete from notice where
+		notice_no = #{noticeNo}
+	</delete>
+	<!-- 공지게시판 추가 -->
+	<update id="insertNotice" parameterType="comm.vo.NoticeVO">
+		insert into notice
+		(notice_no,notice_title,notice_content,notice_date,mng_id)
+		values (
+		notice_seq.nextval, #{noticeTitle}, #{noticeContent}, sysdate,
+		#{mngId})
+		
+		
+	</update>
+
+
+	<!-- 문의게시판 수정 -->
+	<update id="updateInqBoard" parameterType="comm.vo.InqBoardVO">
+		update inq_board
+		set
+		inq_title = #{inqTitle}
+		,inq_content = #{inqContent}
+		,inq_date = sysdate
+		where inq_no = #{inqNo}
+	</update>
+	<!-- 문의게시판 삭제 -->
+	<delete id="deleteInqBoard" parameterType="comm.vo.InqBoardVO">
+		delete from inq_board
+		where inq_no = #{inqNo}
+	</delete>
+
+	<!-- 문의게시판 댓글 추가 -->
+	<insert id="insertInqComt" parameterType="comm.vo.InqComtVO">
+		insert into inq_comt
+		(inqcm_no,inqcm_date,inqcm_content,mng_id,inq_no)
+		values
+		(inqcm_seq.nextval, sysdate, #{inqCmContent},#{mngId},#{inqNo})
+	</insert>
+
+	<!-- 문의게시판 댓글 조회 -->
+	<select id="getListInqComt" parameterType="comm.vo.InqComtVO"
+		resultType="comm.vo.InqComtVO">
+		select * from
+		inq_comt where inq_no = #{inqNo} ORDER BY
+		TO_NUMBER(inqcm_no) DESC
+	</select>
+
+	<!-- 문의게시판 댓글 수정 -->
+	<update id="updateInqComt" parameterType="comm.vo.InqComtVO">
+		update inq_comt
+		set
+		inqcm_content = #{inqCmContent}
+		,inqcm_date = sysdate
+		where inqcm_no =
+		#{inqCmNo}
+	</update>
+	<!-- 문의게시판 댓글 삭제 -->
+
+	<delete id="deleteInqComt" parameterType="comm.vo.InqComtVO">
+		delete from inq_comt
+		where inqcm_no = #{inqCmNo}
+	</delete>
+
+	<!--자유게시판 조회수 증가 -->
+	<update id="viewsFree" parameterType="comm.vo.FreeBoardVO">
+		update freeboard set
+		free_views = free_views + 1 where free_no = #{freeNo}
+	</update>
+	<!--문의게시판 조회수 증가 -->
+	<update id="viewsInq" parameterType="comm.vo.InqBoardVO">
+		update inq_board set
+		inq_views = inq_views + 1 where inq_no = #{inqNo}
+	</update>
+	<!--공지게시판 조회수 증가 -->
+	<update id="viewsNotice" parameterType="comm.vo.NoticeVO">
+		update notice set
+		notice_views = notice_views + 1 where notice_no = #{noticeNo}
+	</update>
+
+	<!--자유게시판 인기게시물 조회 -->
+	<select id="popularFree" parameterType="int"
+		resultType="comm.vo.FreeBoardVO">
+		SELECT *
+		FROM (SELECT *
+		FROM freeboard
+		ORDER BY free_views DESC)
+	<![CDATA[ WHERE ROWNUM <= #{boardCount} ]]>
+	</select>
+
+	<!--자유게시판 최근게시물 조회 -->
+	<select id="recentFree" parameterType="int"
+		resultType="comm.vo.FreeBoardVO">
+		SELECT *
+		FROM (
+		SELECT *
+		FROM freeboard
+		ORDER BY free_date DESC
+		)
+	<![CDATA[ WHERE ROWNUM <= #{boardCount} ]]>
+	</select>
+
+
+	<!-- 인기검색어 구현 : 첫단어일때 insert -->
+
+	<insert id="popSearchInsert" parameterType="shop.vo.SearchVO">
+
+		insert into searches
+		(sch_code, sch_word)
+		values(sch_code_seq.nextval,#{schWord})
+
+	</insert>
+
+	<!-- 인기검색어 구현 : 있는 단어일때 검색횟수 +1씩 update -->
+	<update id="popSearchUpdate" parameterType="shop.vo.SearchVO">
+
+		update searches
+		set
+		sch_cont = sch_cont + 1
+		where sch_word = #{schWord}
+
+	</update>
+
+
+	<!--문의게시판 최근게시물 조회 -->
+	<select id="recentInq" parameterType="int"
+		resultType="comm.vo.InqBoardVO">
+		SELECT *
+		FROM (
+		SELECT *
+		FROM inq_board
+		ORDER BY inq_date DESC
+		)
+	<![CDATA[ WHERE ROWNUM <= #{boardCount} ]]>
+	</select>
+
+	<!--공지게시판 최근게시물 조회 -->
+	<select id="recentNotice" parameterType="int"
+		resultType="comm.vo.NoticeVO">
+		SELECT *
+		FROM (
+		SELECT *
+		FROM notice
+		ORDER BY notice_date DESC
+		)
+	<![CDATA[ WHERE ROWNUM <= #{boardCount} ]]>
+	</select>
+
+	<!-- 인기검색어 이미 있는 단어인지 조회 -->
+	<select id="popSearchCheck" parameterType="String"
+		resultType="int">
+		select count(*) as cnt
+		from searches where sch_word =
+		#{schWord}
+	</select>
+
+	<!-- 인기검색어 10위까지 조회 -->
+	<select id="popSearchSelect" resultType="shop.vo.SearchVO">
+		SELECT *
+		FROM (
+		SELECT *
+		FROM searches
+		ORDER BY SCH_CONT DESC, SCH_CODE
+		ASC, SCH_WORD ASC
+		)
+		<![CDATA[WHERE ROWNUM <= 10]]>
+	</select>
+
+
+</mapper>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="user">
+
+	<insert id="join" parameterType="user.vo.CustomerVO">
+		insert into customer
+		( cust_id,
+		cust_name, cust_mail, cust_addr, cust_gender, cust_tel,
+		cust_birth,
+		cust_nickname, cust_pwd )
+		values
+		( #{custId}, #{custName}, #{custMail},
+		#{custAddr}, #{custGender},
+		#{custTel}, #{custBirth}, #{custNickName},
+		#{custPwd} )
+
+	</insert>
+
+
+
+	<select id="logChk" parameterType="map" resultType="string">
+		select
+		cust_id
+		from customer
+		where cust_id = #{custId} and cust_pwd =
+		#{custPwd}
+	</select>
+
+
+	<select id="custCheck" resultType="int">
+
+		select count(*) as cnt
+		from
+		customer
+		where cust_delete = 'N'
+		and cust_id = #{custId} and cust_pwd =
+		#{custPwd}
+
+
+	</select>
+
+	<select id="mngCheck" resultType="int">
+
+		select count(*) as cnt
+		from
+		manager
+		where mng_id = #{mngId} and mng_pwd = #{mngPwd}
+
+	</select>
+
+
+	<select id="detailCustomer" resultType="CustomerVO"
+		parameterType="String">
+		<!-- select * from customer where cust_id = #{custId} -->
+
+		select
+		cust_id,cust_name,cust_mail,cust_gender,
+		cust_tel,to_char(cust_birth,'yyyy-mm-dd') as cust_birth,
+		cust_nickname,cust_pwd,cust_photo
+		from customer
+		where cust_delete = 'N'
+		and cust_id = #{custId}
+
+
+	</select>
+
+	<update id="updateCustomer" parameterType="CustomerVO">
+		update customer set
+		cust_name = #{custName},
+		cust_mail = #{custMail},
+		cust_gender =
+		#{custGender},
+		cust_tel = #{custTel},
+		cust_birth =
+		to_date(#{custBirth},'yyyy-mm-dd'),
+		cust_nickname = #{custNickName},
+		cust_pwd = #{custPwd},
+		cust_photo = #{custPhoto}
+		where cust_id =
+		#{custId}
+	</update>
+
+	<delete id="deleteCustomer" parameterType="String">
+		delete customer where
+		cust_id = #{custId}
+	</delete>
+
+	<update id="deleteUpdate" parameterType="String">
+		update customer
+		set
+		cust_delete = 'Y'
+		where cust_id = #{custId}
+	</update>
+
+
+	<select id="selectOrder" resultType="hashmap"
+		parameterType="String">
+		SELECT a.*, b.prod_name, b.prod_image, b.prod_price,
+		b.prod_code, c.item_status
+		FROM
+		orders a
+		INNER JOIN items c ON a.ord_no = c.ord_no
+		INNER
+		JOIN products b
+		ON c.prod_code = b.prod_code
+		WHERE a.cust_id = #{custId}
+		AND a.ord_status = 'Y'
+	</select>
+
+
+	<select id="findId" parameterType="String"
+		resultType="CustomerVO">
+		SELECT CUST_ID,
+		CUST_NAME,
+		CUST_MAIL,
+		CUST_ADDR,
+		CUST_GENDER,
+		CUST_TEL,
+		CUST_BIRTH,
+		CUST_NICKNAME,
+		CUST_PWD,
+		CUST_DECNUM,
+		CUST_DELETE
+		FROM CUSTOMER WHERE CUST_TEL = #{custTel}
+	</select>
+
+	<select id="selectWish" resultType="hashmap"
+		parameterType="String">
+		select p.prod_image, p.prod_name, p.prod_price,
+		p.prod_code
+		from wishlist w
+		join products p on w.prod_code = p.prod_code
+		where w.cust_id = #{custId}
+	</select>
+
+	<!-- 신고 회원 찾기 -->
+	<select id="countReport" resultType="CustomerVO">
+		SELECT *
+		FROM customer c
+		WHERE c.cust_decnum >= 3
+		AND NOT EXISTS (
+		SELECT 1
+		FROM blacklists b
+		WHERE b.cust_id = c.cust_id
+		)
+	</select>
+	<!-- 블랙리스트 추가 -->
+	<insert id="insertBlackList" parameterType="comm.vo.BlackListVO">
+		insert into
+		blacklists (blist_no,cust_id,mng_id,blist_reason,blist_date)
+		values(blist_seq.nextval,#{custId},#{mngId},'신고누적',sysdate)
+	</insert>
+
+	<!-- 신고하기 횟수 추가 -->
+	<update id="decareUpdate" parameterType="String">
+		update customer
+		set
+		cust_decnum = cust_decnum +1
+		where cust_id = #{custId}
+	</update>
+	<!-- 모든 블랙리스트 조회 -->
+	<select id="selectAllBlackList" resultType="comm.vo.BlackListVO">
+		select * from
+		blacklists
+	</select>
+	<!-- 리뷰 작성하기 -->
+	<insert id="insertReview" parameterType="shop.vo.ReviewVO">
+		insert into reviews
+		(rev_no, rev_content, ord_no, prod_code, cust_id, rev_image)
+		values (
+		rev_seq.nextval, #{revContent}, #{ordNo}, #{prodCode}, #{custId},
+		#{revImage})
+	</insert>
+
+	<select id="getReview" resultType="shop.vo.ReviewVO">
+		select
+		rev_no as revNo,
+		rev_content as revContent,
+		ord_no as ordNo,
+		prod_code as prodCode,
+		cust_id as custId,
+		rev_image as revImage
+		from reviews
+		where prod_code = #{prodCode}
+
+	</select>
+
+	<!-- 상품검색 -->
+	<select id="searchProd" parameterType="String" resultType="shop.vo.ProductVO">
+		select
+		prod_name as prodName,
+		prod_code as prodCode,
+		prod_price as prodPrice,
+		prod_image as prodImage
+		from products
+		where prod_name like '%' || #{prodName} || '%'
+	</select>
+
+	<!-- 자유게시판 검색 -> 제목으로 -->
+	<select id="searchFree" parameterType="String" resultType="comm.vo.FreeBoardVO">
+		select
+		free_no as freeNo,
+		free_title as freeTitle,
+		free_date as freeDate,
+		free_views as freeViews,
+		cust_id as custId,
+		free_content as freeContent,
+		free_image as freeImage
+		from freeboard
+		where free_title like '%' || #{freeTitle} || '%'
+
+	</select>
+
+
+</mapper>

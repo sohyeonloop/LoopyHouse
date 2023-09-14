@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+#container {
+	width: 100%;
+	height: 70vh;
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+}
+
+.input {
+	height: 44px;
+	width: 390px;
+	justify-content: flex-start;
+	border: 1px solid #cfcfcf;
+	border-radius: 2px;
+}
+
+form {
+	display: flex;
+	margin: 10px;
+}
+
+#loginForm {
+	background-color: rgb(67, 180, 224);
+	width: 398px;
+}
+
+.col-xs-join {
+	display: flex;
+	justify-content: space-between;
+}
+
+#icon {
+	margin: 20px;
+}
+
+#icon img {
+	width: 390px;
+}
+
+p {
+	margin: 10px;
+	font-size: 35px;
+	font-weight: 900;
+}
+
+img {
+	width: 70px;
+}
+
+.col-xs {
+	width: 395px;
+}
+
+#login {
+	display: flex;
+	flex-direction: row;
+}
+
+.formName {
+	display: flex;
+	justify-content: center;
+}
+
+a {
+	margin: 10px;
+	text-decoration: none;
+	color: black;
+}
+
+#loginForm {
+	margin-top: 10px;
+	border: 0;
+	border-radius: 3px;
+	color: white;
+	font-weight: 600;
+	font-size: 18px;
+	height: 51px;
+	border-radius: 3px;
+	color: white;
+	font-weight: 600;
+	font-size: 18px;
+}
+</style>
+
+
+</head>
+
+<body>
+	<div id="container">
+		<div id="icon">
+			<img src="./images/루피의집로고.png"></img>
+
+		</div>
+		<div id="login">
+			<form method="post">
+				<div class="form">
+					<p class="formName">관리자 로그인</p>
+					<div class="col-xs">
+						<input class="input" placeholder="이메일" type="text" id="userId"
+							name="mngId">
+					</div>
+					<div class="col-xs">
+						<input class="input" placeholder="비밀번호" type="password"
+							id="userPw" name="userPw">
+					</div>
+					<div class="col-xs">
+						<input class="input" type="submit" id="loginForm" value="로그인">
+					</div>
+				</div>
+			</form>
+			<form method="post">
+				<div class="form">
+					<p class="formName">회원 로그인</p>
+					<div class="col-xs">
+						<input class="input" placeholder="이메일" type="text" id="userId"
+							name="custId">
+					</div>
+					<div class="col-xs">
+						<input class="input" placeholder="비밀번호" type="password"
+							id="userPw" name="userPw">
+					</div>
+					<div class="col-xs">
+						<input class="input" type="submit" id="loginForm" value="로그인">
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="col-xs-join">
+			<a href="./findId.jsp">아이디 찾기</a> <a href="./findPwd.jsp">비밀번호 찾기</a>
+			<a href="./join.jsp">회원가입</a>
+		</div>
+	</div>
+
+	<script>
+		$('form').submit(function(event) {
+			event.preventDefault(); // 기본 제출 이벤트 막기
+			$.ajax({
+				type : "post",
+				url : './user/login.do', // 요청  URL 가져오기
+				data : $(this).serialize(), // 폼 데이터 가져오기
+				success : function(response) { // 요청 성공 시 처리
+					if (response == "yes") {
+						alert("로그인에 성공하였습니다.");
+						window.location.href = 'index.jsp';
+					} else {
+						alert("로그인에 실패하였습니다.");
+					}
+				},
+				error : function(error) { // 요청 실패 시 처리
+
+					alert("에러가 발생했습니다.")
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decorators defaultdir="/WEB-INF/layout">
+    <decorator name="main" page="layout.jsp">
+       <pattern>/comm/*.do</pattern>
+       <pattern>/boardDetail.do</pattern>  
+       <pattern>/cmtUpdate.do</pattern>
+       <pattern>/comment.do</pattern>
+       <pattern>/write.jsp</pattern>
+       <pattern>/boardModify.jsp</pattern>
+ 
+    </decorator>
+ 
+    <excludes>
+        <pattern>/**/login*.do</pattern>
+        <pattern>/update.do?id=*</pattern>
+    </excludes>
+</decorators>
